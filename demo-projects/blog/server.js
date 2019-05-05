@@ -18,7 +18,18 @@ Promise.all([keystone.prepare({ port }), nextApp.prepare()])
     // NOTE: This is only for demo purposes and should not be used in production
     const users = await keystoneApp.lists.User.adapter.findAll();
     if (!users.length) {
-      await keystoneApp.createItems(initialData);
+      await Promise.all(
+        Object.entries(initialData).map(async ([listName, items]) => {
+          const list = keystoneApp.lists[listName];
+          await keystoneApp.executeQuery({
+            query: `mutation ($items: [${list.createManyInputName}]) { ${
+              list.createManyMutationName
+            }(data: $items) { id } }`,
+            schemaName: 'admin',
+            variables: { items },
+          });
+        })
+      );
     }
 
     Wysiwyg.bindStaticMiddleware(server);

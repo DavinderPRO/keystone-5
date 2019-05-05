@@ -3,7 +3,7 @@ const { print } = require('graphql/language/printer');
 
 // We don't want to actually log, so we mock it before we require the class
 jest.doMock('@keystone-alpha/logger', () => ({
-  logger: jest.fn(() => ({ warn: () => { }, log: () => { }, debug: () => { }, info: () => { } })),
+  logger: jest.fn(() => ({ warn: () => {}, log: () => {}, debug: () => {}, info: () => {} })),
 }));
 
 const List = require('../lib/List');
@@ -17,7 +17,7 @@ function resolveViewPath(viewPath) {
   return path.join(fieldsPackagePath, 'src', 'types', viewPath);
 }
 
-class MockFieldAdapter { }
+class MockFieldAdapter {}
 
 class MockListAdapter {
   constructor() {
@@ -1131,8 +1131,9 @@ test('createMutation', async () => {
 test('createManyMutation', async () => {
   const list = setup();
   const result = await list.createManyMutation(
-    [{ data: { name: 'test1', email: 'test1@example.com' } },
-     { data: { name: 'test2', email: 'test2@example.com' } },
+    [
+      { data: { name: 'test1', email: 'test1@example.com' } },
+      { data: { name: 'test2', email: 'test2@example.com' } },
     ],
     context
   );
@@ -1323,7 +1324,7 @@ describe('Maps from Native JS types to Keystone types', () => {
         { fields: { foo: { type: nativeType } } },
         {
           adapter,
-          getAuth: () => { },
+          getAuth: () => {},
           defaultAccess: { list: true, field: true },
         }
       );

@@ -1139,7 +1139,9 @@ module.exports = class List {
 
     this.checkFieldAccess(operation, itemsToUpdate, context, { gqlName });
 
-    return Promise.all(data.map(d => this._createSingle(d.data, undefined, context, mutationState)));
+    return Promise.all(
+      data.map(d => this._createSingle(d.data, undefined, context, mutationState))
+    );
   }
 
   async _createSingle(data, existingItem, context, mutationState) {

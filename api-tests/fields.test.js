@@ -34,7 +34,15 @@ describe('Test CRUD for all fields', () => {
               },
               async ({ keystone, ...rest }) => {
                 // Populate the database before running the tests
-                await keystone.createItems({ [listName]: mod.initItems() });
+                const list = keystone.lists[listName];
+                const initialDataQuery = `mutation ($items: [${list.createManyInputName}]) { ${
+                  list.createManyMutationName
+                }(data: $items) { id } }`;
+                await keystone.executeQuery({
+                  query: initialDataQuery,
+                  schemaName: 'admin',
+                  variables: { items: mod.initItems() },
+                });
 
                 return testFn({ keystone, adapterName, ...rest });
               }

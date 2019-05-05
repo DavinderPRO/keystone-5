@@ -16,9 +16,7 @@ const {
   validateListAccessControl,
 } = require('@keystone-alpha/access-control');
 
-const {
-  mergeRelationships,
-} = require('./relationship-utils');
+const { mergeRelationships } = require('./relationship-utils');
 const List = require('../List');
 
 const unique = arr => [...new Set(arr)];
@@ -107,7 +105,7 @@ module.exports = class Keystone {
         })
       )
       // Don't unnecessarily leak any connection info
-    ).then(() => { });
+    ).then(() => {});
   }
 
   /**
@@ -117,7 +115,7 @@ module.exports = class Keystone {
     return resolveAllKeys(
       mapKeys(this.adapters, adapter => adapter.disconnect())
       // Don't unnecessarily leak any connection info
-    ).then(() => { });
+    ).then(() => {});
   }
 
   getAdminMeta() {
@@ -212,15 +210,15 @@ module.exports = class Keystone {
        }`,
       `type Query {
           ${unique(
-        flatten(firstClassLists.map(list => list.getGqlQueries({ skipAccessControl })))
-      ).join('\n')}
+            flatten(firstClassLists.map(list => list.getGqlQueries({ skipAccessControl })))
+          ).join('\n')}
           """ Retrieve the meta-data for all lists. """
           _ksListsMeta: [_ListMeta]
        }`,
       `type Mutation {
           ${unique(
-        flatten(firstClassLists.map(list => list.getGqlMutations({ skipAccessControl })))
-      ).join('\n')}
+            flatten(firstClassLists.map(list => list.getGqlMutations({ skipAccessControl })))
+          ).join('\n')}
        }`,
     ].map(s => print(gql(s)));
   }
@@ -234,11 +232,15 @@ module.exports = class Keystone {
   }
 
   executeQuery({ query, variables, schemaName }) {
-    return this._graphQLQuery[schemaName](query, {
-      schemaName,
-      getListAccessControlForUser: () => true,
-      getFieldAccessControlForUser: () => true,
-    }, variables);
+    return this._graphQLQuery[schemaName](
+      query,
+      {
+        schemaName,
+        getListAccessControlForUser: () => true,
+        getFieldAccessControlForUser: () => true,
+      },
+      variables
+    );
   }
 
   getAdminSchema() {
