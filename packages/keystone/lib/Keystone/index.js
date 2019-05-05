@@ -16,7 +16,6 @@ const {
   validateListAccessControl,
 } = require('@keystone-alpha/access-control');
 
-const { mergeRelationships } = require('./relationship-utils');
 const List = require('../List');
 
 const unique = arr => [...new Set(arr)];
