@@ -231,6 +231,7 @@ module.exports = class Keystone {
   }
 
   executeQuery({ query, variables, schemaName }) {
+    console.log({ query });
     return this._graphQLQuery[schemaName](
       query,
       {

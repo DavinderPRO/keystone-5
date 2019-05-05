@@ -20,8 +20,8 @@ keystone
         Object.entries(initialData).map(async ([listName, items]) => {
           const list = keystoneApp.lists[listName];
           await keystoneApp.executeQuery({
-            query: `mutation ($items: [${list.createManyInputName}]) { ${
-              list.createManyMutationName
+            query: `mutation ($items: [${list.gqlNames.createManyInputName}]) { ${
+              list.gqlNames.createManyMutationName
             }(data: $items) { id } }`,
             schemaName: 'admin',
             variables: { items: items.map(d => ({ data: d })) },
@@ -38,8 +38,8 @@ keystone
         Object.entries(initialData).map(async ([listName, items]) => {
           const list = keystoneApp.lists[listName];
           await keystoneApp.executeQuery({
-            query: `mutation ($items: [${list.createManyInputName}]) { ${
-              list.createManyMutationName
+            query: `mutation ($items: [${list.gqlNames.createManyInputName}]) { ${
+              list.gqlNames.createManyMutationName
             }(data: $items) { id } }`,
             schemaName: 'admin',
             variables: { items: items.map(d => ({ data: d })) },
