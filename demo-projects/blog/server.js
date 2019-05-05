@@ -26,7 +26,7 @@ Promise.all([keystone.prepare({ port }), nextApp.prepare()])
               list.createManyMutationName
             }(data: $items) { id } }`,
             schemaName: 'admin',
-            variables: { items },
+            variables: { items: items.map(d => ({ data: d })) },
           });
         })
       );
