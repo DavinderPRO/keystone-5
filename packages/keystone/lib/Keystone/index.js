@@ -17,8 +17,6 @@ const {
 } = require('@keystone-alpha/access-control');
 
 const {
-  unmergeRelationships,
-  createRelationships,
   mergeRelationships,
 } = require('./relationship-utils');
 const List = require('../List');
@@ -109,7 +107,7 @@ module.exports = class Keystone {
         })
       )
       // Don't unnecessarily leak any connection info
-    ).then(() => {});
+    ).then(() => { });
   }
 
   /**
@@ -119,7 +117,7 @@ module.exports = class Keystone {
     return resolveAllKeys(
       mapKeys(this.adapters, adapter => adapter.disconnect())
       // Don't unnecessarily leak any connection info
-    ).then(() => {});
+    ).then(() => { });
   }
 
   getAdminMeta() {
@@ -214,15 +212,15 @@ module.exports = class Keystone {
        }`,
       `type Query {
           ${unique(
-            flatten(firstClassLists.map(list => list.getGqlQueries({ skipAccessControl })))
-          ).join('\n')}
+        flatten(firstClassLists.map(list => list.getGqlQueries({ skipAccessControl })))
+      ).join('\n')}
           """ Retrieve the meta-data for all lists. """
           _ksListsMeta: [_ListMeta]
        }`,
       `type Mutation {
           ${unique(
-            flatten(firstClassLists.map(list => list.getGqlMutations({ skipAccessControl })))
-          ).join('\n')}
+        flatten(firstClassLists.map(list => list.getGqlMutations({ skipAccessControl })))
+      ).join('\n')}
        }`,
     ].map(s => print(gql(s)));
   }
@@ -233,6 +231,14 @@ module.exports = class Keystone {
   registerSchema(schemaName, schema) {
     this._graphQLQuery[schemaName] = (query, context, variables) =>
       graphql(schema, query, null, context, variables);
+  }
+
+  executeQuery({ query, variables, schemaName }) {
+    return this._graphQLQuery[schemaName](query, {
+      schemaName,
+      getListAccessControlForUser: () => true,
+      getFieldAccessControlForUser: () => true,
+    }, variables);
   }
 
   getAdminSchema() {
@@ -381,35 +387,5 @@ module.exports = class Keystone {
 
   createItem(listKey, itemData) {
     return this.lists[listKey].adapter.create(itemData);
-  }
-
-  async createItems(itemsToCreate) {
-    // 1. Split it apart
-    const { relationships, data } = unmergeRelationships(this.lists, itemsToCreate);
-    // 2. Create the items
-    // NOTE: Only works if all relationships fields are non-"required"
-    const createdItems = await resolveAllKeys(
-      mapKeys(data, (items, listKey) =>
-        Promise.all(items.map(itemData => this.createItem(listKey, itemData)))
-      )
-    );
-
-    let createdRelationships;
-    try {
-      // 3. Create the relationships
-      createdRelationships = await createRelationships(this.lists, relationships, createdItems);
-    } catch (error) {
-      // 3.5. If creation of relationships didn't work, unwind the createItems
-      Promise.all(
-        Object.entries(createdItems).map(([listKey, items]) =>
-          Promise.all(items.map(({ id }) => this.lists[listKey].adapter.delete(id)))
-        )
-      );
-      // Re-throw the error now that we've cleaned up
-      throw error;
-    }
-
-    // 4. Merge the data back together again
-    return mergeRelationships(createdItems, createdRelationships);
   }
 };

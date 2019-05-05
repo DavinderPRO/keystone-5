@@ -9,20 +9,22 @@ const { MongooseAdapter } = require('@keystone-alpha/adapter-mongoose');
 const { startAuthedSession, endAuthedSession } = require('@keystone-alpha/session');
 const cuid = require('cuid');
 
-const initialData = {
-  User: [
-    {
-      name: 'Boris Bozic',
-      email: 'boris@keystone-alpha.com',
-      password: 'correctbattery',
-    },
-    {
-      name: 'Jed Watson',
-      email: 'jed@keystone-alpha.com',
-      password: 'horsestaple',
-    },
-  ],
-};
+const initialData = [{
+  data: {
+    name: 'Boris Bozic',
+    email: 'boris@keystone-alpha.com',
+    password: 'correctbattery',
+  }
+},
+{
+  data: {
+    name: 'Jed Watson',
+    email: 'jed@keystone-alpha.com',
+    password: 'horsestaple',
+  }
+},];
+
+const initialDataQuery = `mutation ($users: [UsersCreateInput]) { createUsers(data: $users) { id email name } }`;
 
 const COOKIE_SECRET = 'qwerty';
 
@@ -106,11 +108,11 @@ multiAdapterRunners().map(({ runner, adapterName }) =>
         'Gives access denied when not logged in',
         runner(setupKeystone, async ({ keystone, server }) => {
           // seed the db
-          await keystone.createItems(initialData);
+          await keystone.executeQuery({ query: initialDataQuery, schemaName: 'admin', variables: { users: initialData } });
           return supertest(server.app)
             .set('Accept', 'application/json')
             .post('/admin/api', { query: '{ allUsers { id } }' })
-            .then(function(res) {
+            .then(function (res) {
               expect(res.statusCode).toBe(200);
               res.body = JSON.parse(res.text);
               expect(res.body.data).toEqual({ allUsers: null });
@@ -123,13 +125,12 @@ multiAdapterRunners().map(({ runner, adapterName }) =>
         test(
           'Allows access with bearer token',
           runner(setupKeystone, async ({ keystone, server }) => {
-            await keystone.createItems(initialData);
+            await keystone.executeQuery({ query: initialDataQuery, schemaName: 'admin', variables: { users: initialData } });
             const { success, token } = await login(
               server,
-              initialData.User[0].email,
-              initialData.User[0].password
+              initialData[0].data.email,
+              initialData[0].data.password
             );
-
             expect(success).toBe(true);
             expect(token).toBeTruthy();
 
@@ -137,11 +138,11 @@ multiAdapterRunners().map(({ runner, adapterName }) =>
               .set('Authorization', `Bearer ${token}`)
               .set('Accept', 'application/json')
               .post('/admin/api', { query: '{ allUsers { id } }' })
-              .then(function(res) {
+              .then(function (res) {
                 expect(res.statusCode).toBe(200);
                 res.body = JSON.parse(res.text);
                 expect(res.body.data).toHaveProperty('allUsers');
-                expect(res.body.data.allUsers).toHaveLength(initialData.User.length);
+                expect(res.body.data.allUsers).toHaveLength(initialData.length);
                 expect(res.body).not.toHaveProperty('errors');
               });
           })
@@ -150,11 +151,12 @@ multiAdapterRunners().map(({ runner, adapterName }) =>
         test(
           'Allows access with cookie',
           runner(setupKeystone, async ({ keystone, server }) => {
-            await keystone.createItems(initialData);
+            const result = await keystone.executeQuery({ query: initialDataQuery, schemaName: 'admin', variables: { users: initialData } });
+            console.log(result.errors);
             const { success, token } = await login(
               server,
-              initialData.User[0].email,
-              initialData.User[0].password
+              initialData[0].data.email,
+              initialData[0].data.password
             );
 
             expect(success).toBe(true);
@@ -164,11 +166,11 @@ multiAdapterRunners().map(({ runner, adapterName }) =>
               .set('Cookie', `keystone.sid=${signCookie(token)}`)
               .set('Accept', 'application/json')
               .post('/admin/api', { query: '{ allUsers { id } }' })
-              .then(function(res) {
+              .then(function (res) {
                 expect(res.statusCode).toBe(200);
                 res.body = JSON.parse(res.text);
                 expect(res.body.data).toHaveProperty('allUsers');
-                expect(res.body.data.allUsers).toHaveLength(initialData.User.length);
+                expect(res.body.data.allUsers).toHaveLength(initialData.length);
                 expect(res.body).not.toHaveProperty('errors');
               });
           })

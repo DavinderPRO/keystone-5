@@ -23,7 +23,7 @@ function setupServer({ name, adapterName, createLists = () => {} }) {
 }
 
 function graphqlRequest({ keystone, query }) {
-  return keystone._graphQLQuery[SCHEMA_NAME](query, keystone.getAccessContext(SCHEMA_NAME, {}));
+  return keystone.executeQuery({ query, schemaName: SCHEMA_NAME});
 }
 
 // One instance per node.js thread which cleans itself up when the main process
